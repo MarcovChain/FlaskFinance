@@ -35,15 +35,36 @@ ww['int_total'] = round(ww['interest'].cumsum(),2)
 
 # running balance
 ww['balance'] = round(500000 - ww['prin_total'], 2)
+ww['balance2'] = ww['balance'].map("{:,}".format)
 ww["date"] = pd.to_datetime(ww["date"], format="%Y-%m-%d")
 types = ww["type"].unique()
 
 # total principal and extra payments
 total_principal = ww.loc[ww['type'] == 'payment', 'principal'].sum()
 total_extra = ww.loc[ww['type'] == 'extra', 'principal'].sum()
-####
 
-fig = px.scatter(ww, x="date", y="balance", color="type", size="principal")
+##### graphical elements
+
+# tab style
+tabs_styles = {
+    'height': '44px'
+}
+tab_style = {
+    'borderBottom': '1px solid #d6d6d6',
+    'padding': '6px',
+    'fontWeight': 'bold'
+}
+
+tab_selected_style = {
+    'borderTop': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
+    'backgroundColor': '#CCCCCC',
+    'color': 'white',
+    'padding': '6px'
+}
+
+# set up balance plot
+balance = px.scatter(ww, x="date", y="balance", color="type", size="principal")
 
 # define background according to time of day
 mytime = time.localtime()
@@ -54,7 +75,7 @@ if mytime.tm_hour < 9 or mytime.tm_hour > 19:
     'text': '#ffffe5'
     }
 
-    fig.update_layout(
+    balance.update_layout(
     plot_bgcolor=colors['background'],
     paper_bgcolor=colors['background'],
     font_color=colors['text']
@@ -67,23 +88,18 @@ else:
     'text': '#000000'
     }
 
-    fig.update_layout(
-    #plot_bgcolor=colors['background'],
+    balance.update_layout(
     paper_bgcolor=colors['background'],
     font_color=colors['text']
     )
 
-# fig.update_layout(
-#     # plot_bgcolor=colors['background'],
-#     paper_bgcolor=colors['background'],
-#     font_color=colors['text']
-# )
-
+# set up table
 table = dash_table.DataTable(
     data=ww.to_dict('records'),
     columns=[{'id': c, 'name': c} for c in ww.columns],
-    fixed_rows={'headers': True},
     style_as_list_view=True,
+    fixed_rows={'headers': True},
+    style_table={'height': 600},  # defaults to 500
     style_header={'backgroundColor': '#ff842d'},
     style_cell={
         'backgroundColor': colors['background'],
@@ -92,32 +108,33 @@ table = dash_table.DataTable(
     },
 )
 
+#### app layout
+
 app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
-    html.H1(
-        children="Mortgage Portal",
+    html.H3(
+        children="Marc's Money-Making Machine",
         style={
             'textAlign': 'center',
             'color': colors['text']
         }
     ),
-
-    html.Div(children="Marc's Money-Making Machine", style={
-        'textAlign': 'center',
-        'color': colors['text']
-    }),
-
-    dcc.Graph(
-        id='example-graph-2',
-        figure=fig
-    ),
-
-    html.H4(children="Data table", style={
-        'textAlign': 'center',
-        'color': colors['text']
-    }),
-
-    table
+    dcc.Tabs(id='tabs-example', value='tab-1', children=[
+        dcc.Tab(label='Mortgage plots', value='tab-1', style=tab_style, selected_style=tab_selected_style),
+        dcc.Tab(label='Mortgage table', value='tab-2', style=tab_style, selected_style=tab_selected_style),
+    ]),
+    html.Div(id='tabs-example-content')
 ])
+
+@app.callback(Output('tabs-example-content', 'children'),
+              Input('tabs-example', 'value'))
+def render_content(tab):
+    if tab == 'tab-1':
+        return dcc.Graph(
+        id='example-graph-2',
+        figure=balance
+        )
+    elif tab == 'tab-2':
+        return table
 
 if __name__ == '__main__':
     app.run_server(debug=True)
