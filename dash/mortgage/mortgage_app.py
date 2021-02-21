@@ -13,10 +13,8 @@ import numpy as np
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-
 def custom_date_parser(date):
     return pd.datetime.strptime(date, "%Y-%m-%d") 
-
 
 #### Fetch ww from local CSV using pandas
 ww = pd.read_csv(
@@ -37,7 +35,6 @@ ww['int_total'] = round(ww['interest'].cumsum(),2)
 
 # running balance
 ww['balance'] = round(500000 - ww['prin_total'], 2)
-
 ww["date"] = pd.to_datetime(ww["date"], format="%Y-%m-%d")
 types = ww["type"].unique()
 
@@ -66,7 +63,7 @@ if mytime.tm_hour < 9 or mytime.tm_hour > 19:
 else:
     # day
     colors = {
-    'background': '#FFFFFF',
+    'background': '#fdfcfa',
     'text': '#000000'
     }
 
@@ -87,7 +84,7 @@ table = dash_table.DataTable(
     columns=[{'id': c, 'name': c} for c in ww.columns],
     fixed_rows={'headers': True},
     style_as_list_view=True,
-    style_header={'backgroundColor': 'rgb(50, 50, 50)'},
+    style_header={'backgroundColor': '#ff842d'},
     style_cell={
         'backgroundColor': colors['background'],
         'color': colors['text'],
@@ -96,7 +93,7 @@ table = dash_table.DataTable(
 )
 
 app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
-    html.H3(
+    html.H1(
         children="Mortgage Portal",
         style={
             'textAlign': 'center',
