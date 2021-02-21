@@ -8,6 +8,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import dash_table
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import numpy as np 
 
@@ -65,6 +66,8 @@ tab_selected_style = {
 
 # set up balance plot
 balance = px.scatter(ww, x="date", y="balance", color="type", size="principal")
+interest = px.line(ww, x="date", y="int%", color="type")
+#interest.add_trace(px.line(ww, x="date", y="prin%"))
 
 # define background according to time of day
 mytime = time.localtime()
@@ -100,7 +103,7 @@ table = dash_table.DataTable(
     style_as_list_view=True,
     fixed_rows={'headers': True},
     style_table={'height': 600},  # defaults to 500
-    style_header={'backgroundColor': '#ff842d'},
+    style_header={'backgroundColor': '#2fa4e7'},
     style_cell={
         'backgroundColor': colors['background'],
         'color': colors['text'],
@@ -125,14 +128,31 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
     html.Div(id='tabs-example-content')
 ])
 
+#### app callback ####
+
 @app.callback(Output('tabs-example-content', 'children'),
               Input('tabs-example', 'value'))
 def render_content(tab):
     if tab == 'tab-1':
-        return dcc.Graph(
-        id='example-graph-2',
-        figure=balance
-        )
+        return (html.Div([
+        html.H3(children='Payment plot'),
+
+        dcc.Graph(
+            id='graph1',
+            figure=balance
+        ),  
+    ]),
+    # New Div for all elements in the new 'row' of the page
+    html.Div([
+        html.H3(children='Interest plot'),
+
+        dcc.Graph(
+            id='graph2',
+            figure=interest
+        ),  
+    ]))
+
+        
     elif tab == 'tab-2':
         return table
 
