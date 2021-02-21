@@ -34,7 +34,7 @@ nav = dbc.Navbar(
     children=[
         dbc.Row(
             [
-                dbc.Col(dbc.NavbarBrand("Stock Tracker", className="ml-2")),
+                dbc.Col(dbc.NavbarBrand("Marc's Money Making Machine (M4)", className="ml-2")),
             ],
             align="center",
             no_gutters=True,
@@ -150,7 +150,7 @@ body_container = dbc.Container(
                         ),
                         dbc.Col(
                             graphs,
-                            md=8,
+                            md=8 ,
                         ),
                     ],
                 ),

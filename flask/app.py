@@ -8,7 +8,7 @@ from plotly.utils import PlotlyJSONEncoder
 import json
 import numpy as np
 
-faithful = read_csv('./data/faithful.csv')
+faithful = read_csv('flask/data/faithful.csv')
 app = Flask(__name__)
 
 @app.route('/graph', methods=['GET'])
