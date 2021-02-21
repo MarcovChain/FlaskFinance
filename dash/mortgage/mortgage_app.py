@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-
+import time
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -9,7 +9,7 @@ from dash.dependencies import Input, Output
 import dash_table
 import plotly.express as px
 import pandas as pd
-import numpy as np
+import numpy as np 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -46,29 +46,51 @@ total_principal = ww.loc[ww['type'] == 'payment', 'principal'].sum()
 total_extra = ww.loc[ww['type'] == 'extra', 'principal'].sum()
 ####
 
-colors = {
+fig = px.scatter(ww, x="date", y="balance", color="type", size="principal")
+
+# define background according to time of day
+mytime = time.localtime()
+if mytime.tm_hour < 9 or mytime.tm_hour > 19:
+    # night
+    colors = {
     'background': '#111111',
-    'text': '#7FDBFF'
-}
+    'text': '#ffffe5'
+    }
 
-
-fig = px.scatter(ww, x="date", y="balance", color="type")
-
-fig.update_layout(
+    fig.update_layout(
     plot_bgcolor=colors['background'],
     paper_bgcolor=colors['background'],
     font_color=colors['text']
-)
+    )
+    
+else:
+    # day
+    colors = {
+    'background': '#FFFFFF',
+    'text': '#000000'
+    }
+
+    fig.update_layout(
+    #plot_bgcolor=colors['background'],
+    paper_bgcolor=colors['background'],
+    font_color=colors['text']
+    )
+
+# fig.update_layout(
+#     # plot_bgcolor=colors['background'],
+#     paper_bgcolor=colors['background'],
+#     font_color=colors['text']
+# )
 
 table = dash_table.DataTable(
     data=ww.to_dict('records'),
     columns=[{'id': c, 'name': c} for c in ww.columns],
     fixed_rows={'headers': True},
     style_as_list_view=True,
-    style_header={'backgroundColor': 'rgb(30, 30, 30)'},
+    style_header={'backgroundColor': 'rgb(50, 50, 50)'},
     style_cell={
-        'backgroundColor': 'rgb(50, 50, 50)',
-        'color': 'white',
+        'backgroundColor': colors['background'],
+        'color': colors['text'],
         'font-family': "Arial"
     },
 )
