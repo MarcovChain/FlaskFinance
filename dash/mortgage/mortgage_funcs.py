@@ -25,15 +25,27 @@ def mt_transformation(mt):
     types = mt["type"].unique()
 
     # total principal and extra payments
-    total_payments = mt.loc[mt['type'] == 'payment', 'principal'].sum()
+    #total_payments = mt.loc[mt['type'] == 'payment', 'principal'].sum()
     total_extra = mt.loc[mt['type'] == 'extra', 'principal'].sum()
 
     # summary dataframe
-    col_names =  ['total_payments', 'total_extra']
+    col_names =  ['total payments', 'total extra', 'total principal',
+                  'principal %', 'total interest', 'interest %', 
+                  'remaining balance']
     mt_summary = pd.DataFrame(columns = col_names)
-    mt_summary = pd.DataFrame({'total_payments': mt.loc[mt['type'] == 'payment', 'principal'].sum(),  
-                        'total_extra': [total_extra],  
+    mt_summary = pd.DataFrame({
+                        'total payments': mt.loc[mt['type'] == 'payment', 'principal'].sum(),  
+                        'total extra': [total_extra],
+                        'total principal': mt['prin_total'].max(),
+                        'principal %': mt['prin%'].max(),
+                        'total interest': mt['int_total'].max(),
+                        'interest %': mt['int%'].min(), 
+                        'remaining balance': mt['balance'].min(),
                         })
+
+    #mt_summary = mt_summary.head().style.format("{:,.0f}")
+    #mt_summary = mt_summary.style.format('{:,}')
+
     return mt, mt_summary
 
 # update time of day style for plots
