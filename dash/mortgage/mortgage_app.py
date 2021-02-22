@@ -1,57 +1,38 @@
 # -*- coding: utf-8 -*-
+
+# Dash code for mortgage tabs
+# (c) 2021 Marc Boulet
+
+# libraries
 import os
 import time
+import pandas as pd
+import numpy as np 
+
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-import dash_table
+
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
-import numpy as np 
+
+import mortgage_funcs # source file for mortgage functions
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 def custom_date_parser(date):
     return pd.datetime.strptime(date, "%Y-%m-%d") 
 
-#### Fetch mt from local CSV using pandas
-mt = pd.read_csv(
+#### Fetch mortgage data csv file
+df = pd.read_csv(
     os.path.join(os.path.dirname(__file__), "../../data/mortgage.csv"),
-    # index_col=0,
     parse_dates=True,
     date_parser=custom_date_parser,
 )
 
-# row-based metrics
-# principal percentage and cumsum
-mt['prin%'] = np.where(mt['type'] == 'payment', (mt['principal'] / (mt['principal'] + mt['interest'])*100), np.nan).round(2)
-mt['prin_total'] = round(mt['principal'].cumsum(),2)
-
-# interest percentage and cumsum
-mt['int%'] =np.where(mt['type'] == 'payment', (mt['interest'] / (mt['principal'] + mt['interest'])* 100), np.nan).round(2) 
-mt['int_total'] = round(mt['interest'].cumsum(),2)
-
-# running balance
-mt['balance'] = round(500000 - mt['prin_total'], 2)
-mt['balance2'] = mt['balance'].map("{:,}".format)
-mt["date"] = pd.to_datetime(mt["date"], format="%Y-%m-%d")
-types = mt["type"].unique()
-
-# total principal and extra payments
-total_payments = mt.loc[mt['type'] == 'payment', 'principal'].sum()
-total_extra = mt.loc[mt['type'] == 'extra', 'principal'].sum()
-
-
-# summary dataframe
-col_names =  ['total_payments', 'total_extra']
-mt_summary = pd.DataFrame(columns = col_names)
-mt_summary = pd.DataFrame({'total_payments': mt.loc[mt['type'] == 'payment', 'principal'].sum(),  
-                      'total_extra': [total_extra],  
-                      })
-
+mt, mt_summary = mortgage_funcs.mt_transformation(df)
 
 ##### graphical elements
 
@@ -70,62 +51,20 @@ else:
     'text': '#000000'
     }
 
-# update time of day style for plots
-def time_of_day(df): 
-    mytime = time.localtime()
-    if mytime.tm_hour < 9 or mytime.tm_hour > 19:
-        # night
-        df.update_layout(
-        plot_bgcolor=colors['background'],
-        paper_bgcolor=colors['background'],
-        font_color=colors['text']
-        )
-    else:
-        df.update_layout(
-        paper_bgcolor=colors['background'],
-        font_color=colors['text']
-        )
-    return df
-
 # set up plots
-balance = px.scatter(mt, x="date", y="balance", color="type", size="principal")
-interest = px.line(mt, x="date", y="int%", color="type")
-#interest.add_trace(px.line(mt, x="date", y="prin%"))
+mt_balance = px.scatter(mt, x="date", y="balance", color="type", size="principal")
+mt_interest = px.line(mt, x="date", y="int%", color="type")
+#mt_interest.add_trace(px.line(mt, x="date", y="prin%"))
 
-# adjust plots to time of day
-balance = time_of_day(balance)
-interest = time_of_day(interest)
+# adjust plots for time of day
+mt_balance = mortgage_funcs.time_of_day(mt_balance)
+mt_interest = mortgage_funcs.time_of_day(mt_interest)
 
-# set up table
-table = dash_table.DataTable(
-    data=mt.to_dict('records'),
-    columns=[{'id': c, 'name': c} for c in mt.columns],
-    style_as_list_view=True,
-    fixed_rows={'headers': True},
-    style_table={'height': 600},
-    style_header={'backgroundColor': '#2fa4e7'},
-    style_cell={
-        'backgroundColor': colors['background'],
-        'color': colors['text'],
-        'font-family': "Arial"
-    },
-)
+# set up tables
+mt_table = mortgage_funcs.table_setup(mt)
+mt_summary_table = mortgage_funcs.table_setup(mt_summary)
 
-total = dash_table.DataTable(
-    data=mt_summary.to_dict('records'),
-    columns=[{'id': c, 'name': c} for c in mt_summary.columns],
-    style_as_list_view=True,
-    fixed_rows={'headers': True},
-    style_table={'height': 600},
-    style_header={'backgroundColor': '#2fa4e7'},
-    style_cell={
-        'backgroundColor': colors['background'],
-        'color': colors['text'],
-        'font-family': "Arial"
-    },
-)
-
-# tab style
+# tab styles
 tabs_styles = {
     'height': '44px'
 }
@@ -172,7 +111,7 @@ def render_content(tab):
 
         dcc.Graph(
             id='graph1',
-            figure=balance
+            figure=mt_balance
         ),  
     ]),
     # New Div for all elements in the new 'row' of the page
@@ -182,22 +121,21 @@ def render_content(tab):
 
         dcc.Graph(
             id='graph2',
-            figure=interest
+            figure=mt_interest
         ),  
     ]))
 
-        
     elif tab == 'tab-2':
         return (html.Div([
         html.H3(children='Summary stats',
         style={'textAlign': 'center'}),
-        total
+        mt_summary_table
         ]),  
     # New Div for all elements in the new 'row' of the page
     html.Div([
         html.H3(children='Transactions',
         style={'textAlign': 'center'}),
-        table
+        mt_table
         ]),  
     )
 
