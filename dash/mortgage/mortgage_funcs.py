@@ -21,12 +21,6 @@ def mt_transformation(mt):
     # running balance
     mt['balance'] = round(500000 - mt['prin_total'], 2)
     mt['balance2'] = mt['balance'].map("{:,}".format)
-    mt["date"] = pd.to_datetime(mt["date"], format="%Y-%m-%d")
-    types = mt["type"].unique()
-
-    # total principal and extra payments
-    #total_payments = mt.loc[mt['type'] == 'payment', 'principal'].sum()
-    total_extra = mt.loc[mt['type'] == 'extra', 'principal'].sum()
 
     # summary dataframe
     col_names =  ['total payments', 'total extra', 'total principal',
@@ -35,7 +29,7 @@ def mt_transformation(mt):
     mt_summary = pd.DataFrame(columns = col_names)
     mt_summary = pd.DataFrame({
                         'total payments': mt.loc[mt['type'] == 'payment', 'principal'].sum(),  
-                        'total extra': [total_extra],
+                        'total extra': [mt.loc[mt['type'] == 'extra', 'principal'].sum()],
                         'total principal': mt['prin_total'].max(),
                         'principal %': mt['prin%'].max(),
                         'total interest': mt['int_total'].max(),
