@@ -17,8 +17,8 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 def custom_date_parser(date):
     return pd.datetime.strptime(date, "%Y-%m-%d") 
 
-#### Fetch ww from local CSV using pandas
-ww = pd.read_csv(
+#### Fetch mt from local CSV using pandas
+mt = pd.read_csv(
     os.path.join(os.path.dirname(__file__), "../../data/mortgage.csv"),
     # index_col=0,
     parse_dates=True,
@@ -27,22 +27,30 @@ ww = pd.read_csv(
 
 # row-based metrics
 # principal percentage and cumsum
-ww['prin%'] = np.where(ww['type'] == 'payment', ww['principal'] / (ww['principal'] + ww['interest']), np.nan).round(4)
-ww['prin_total'] = round(ww['principal'].cumsum(),2)
+mt['prin%'] = np.where(mt['type'] == 'payment', (mt['principal'] / (mt['principal'] + mt['interest'])*100), np.nan).round(2)
+mt['prin_total'] = round(mt['principal'].cumsum(),2)
 
 # interest percentage and cumsum
-ww['int%'] =np.where(ww['type'] == 'payment', ww['interest'] / (ww['principal'] + ww['interest']), np.nan).round(4)
-ww['int_total'] = round(ww['interest'].cumsum(),2)
+mt['int%'] =np.where(mt['type'] == 'payment', (mt['interest'] / (mt['principal'] + mt['interest'])* 100), np.nan).round(2) 
+mt['int_total'] = round(mt['interest'].cumsum(),2)
 
 # running balance
-ww['balance'] = round(500000 - ww['prin_total'], 2)
-ww['balance2'] = ww['balance'].map("{:,}".format)
-ww["date"] = pd.to_datetime(ww["date"], format="%Y-%m-%d")
-types = ww["type"].unique()
+mt['balance'] = round(500000 - mt['prin_total'], 2)
+mt['balance2'] = mt['balance'].map("{:,}".format)
+mt["date"] = pd.to_datetime(mt["date"], format="%Y-%m-%d")
+types = mt["type"].unique()
 
 # total principal and extra payments
-total_principal = ww.loc[ww['type'] == 'payment', 'principal'].sum()
-total_extra = ww.loc[ww['type'] == 'extra', 'principal'].sum()
+total_principal = mt.loc[mt['type'] == 'payment', 'principal'].sum()
+total_extra = mt.loc[mt['type'] == 'extra', 'principal'].sum()
+
+# summary dataframe
+col_names =  ['total_principal', 'total_extra']
+mt_summary = pd.DataFrame(columns = col_names)
+mt_summary = pd.DataFrame({'total_principal': [total_principal],  
+                      'total_extra': [total_extra],  
+                      })
+mt_summary['total_principal'] = total_principal
 
 ##### graphical elements
 
@@ -65,13 +73,13 @@ tab_selected_style = {
 }
 
 # set up balance plot
-balance = px.scatter(ww, x="date", y="balance", color="type", size="principal")
-interest = px.line(ww, x="date", y="int%", color="type")
-#interest.add_trace(px.line(ww, x="date", y="prin%"))
+balance = px.scatter(mt, x="date", y="balance", color="type", size="principal")
+interest = px.line(mt, x="date", y="int%", color="type")
+#interest.add_trace(px.line(mt, x="date", y="prin%"))
 
 # define background according to time of day
 mytime = time.localtime()
-if mytime.tm_hour < 9 or mytime.tm_hour > 19:
+if mytime.tm_hour < 9 or mytime.tm_hour > 20:
     # night
     colors = {
     'background': '#111111',
@@ -98,8 +106,22 @@ else:
 
 # set up table
 table = dash_table.DataTable(
-    data=ww.to_dict('records'),
-    columns=[{'id': c, 'name': c} for c in ww.columns],
+    data=mt.to_dict('records'),
+    columns=[{'id': c, 'name': c} for c in mt.columns],
+    style_as_list_view=True,
+    fixed_rows={'headers': True},
+    style_table={'height': 600},  # defaults to 500
+    style_header={'backgroundColor': '#2fa4e7'},
+    style_cell={
+        'backgroundColor': colors['background'],
+        'color': colors['text'],
+        'font-family': "Arial"
+    },
+)
+
+total = dash_table.DataTable(
+    data=mt_summary.to_dict('records'),
+    columns=[{'id': c, 'name': c} for c in mt_summary.columns],
     style_as_list_view=True,
     fixed_rows={'headers': True},
     style_table={'height': 600},  # defaults to 500
@@ -154,7 +176,18 @@ def render_content(tab):
 
         
     elif tab == 'tab-2':
-        return table
+        return (html.Div([
+        html.H3(children='Summary stats'),
+
+        total
+        ]),  
+    # New Div for all elements in the new 'row' of the page
+    html.Div([
+        html.H3(children='Data table'),
+
+        table
+        ]),  
+    )
 
 if __name__ == '__main__':
     app.run_server(debug=True)
