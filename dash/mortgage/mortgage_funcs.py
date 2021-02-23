@@ -1,14 +1,25 @@
 # helper functions for the mortgage tabs
 
 # libraries
+import os
 import time
 import pandas as pd
 import numpy as np
 import dash_table
+import m4_parameters
 
-# mortgage dataframe transformation
+# mortgage dataframe 
 
-def mt_transformation(mt):
+def custom_date_parser(date):
+    return pd.datetime.strptime(date, "%Y-%m-%d") 
+
+def mt_fetch():
+
+    mt = pd.read_csv(
+    os.path.join(os.path.dirname(__file__), "../../data/mortgage.csv"),
+    parse_dates=True,
+    date_parser=custom_date_parser,
+)
     # row-based metrics
     # principal percentage and cumsum
     mt['prin%'] = np.where(mt['type'] == 'payment', (mt['principal'] / (mt['principal'] + mt['interest'])*100), np.nan).round(2)
@@ -19,7 +30,7 @@ def mt_transformation(mt):
     mt['int_total'] = round(mt['interest'].cumsum(),2)
 
     # running balance
-    mt['balance'] = round(500000 - mt['prin_total'], 2)
+    mt['balance'] = round(m4_parameters.mt_balance - mt['prin_total'], 2)
     mt['balance2'] = mt['balance'].map("{:,}".format)
 
     # summary dataframe
@@ -46,7 +57,7 @@ def mt_transformation(mt):
 
 ### time of day style
 mytime = time.localtime()
-if mytime.tm_hour < 9 or mytime.tm_hour > 19:
+if mytime.tm_hour < m4_parameters.morning or mytime.tm_hour > m4_parameters.night:
     # night
     colors = {
     'background': '#111111',
@@ -61,7 +72,7 @@ else:
 
 def time_of_day(df): 
     mytime = time.localtime()
-    if mytime.tm_hour < 9 or mytime.tm_hour > 19:
+    if mytime.tm_hour < m4_parameters.morning or mytime.tm_hour > m4_parameters.night:
         # night
         df.update_layout(
         plot_bgcolor=colors['background'],
