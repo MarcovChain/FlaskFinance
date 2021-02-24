@@ -133,3 +133,4 @@ default.html
 .vscode/settings.json
 *.csv
 /data
+*.ipynb
