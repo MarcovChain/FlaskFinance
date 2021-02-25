@@ -133,8 +133,6 @@ default.html
 .vscode/settings.json
 *.csv
 /data
-*.ipynb
-*.ipynb
 dash/mortgage/m4_parameters.py
 notebooks/m4_parameters.py
 dash/mortgage/m4_parameters.py
