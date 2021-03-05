@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Dash code for mortgage tabs
+# Dash code for mortgage & stock tabs
 # (c) 2021 Marc Boulet
 
 #### libraries ####
@@ -20,7 +20,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 import mortgage_funcs # source file for mortgage functions
+import stock_funcs # source file for stock functions
 import m4_parameters 
+
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -29,6 +31,7 @@ def custom_date_parser(date):
 
 #### Fetch data 
 mt, mt_summary = mortgage_funcs.mt_fetch()
+st, st_summary = stock_funcs.st_fetch()
 
 #### graphical elements ####
 
@@ -44,6 +47,8 @@ mt_interest = mortgage_funcs.time_of_day(mt_interest)
 # set up tables
 mt_table = mortgage_funcs.table_setup(mt)
 mt_summary_table = mortgage_funcs.table_setup(mt_summary)
+st_table = mortgage_funcs.table_setup(st)
+st_summary_table = mortgage_funcs.table_setup(st_summary)
 
 #### app layout ####
 
@@ -55,6 +60,7 @@ app.layout = html.Div(style={'backgroundColor': mortgage_funcs.colors['backgroun
     dcc.Tabs(id='tabs-example', value='tab-1', children=[
         dcc.Tab(label='Mortgage plots', value='tab-1', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
         dcc.Tab(label='Mortgage table', value='tab-2', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='Stock table', value='tab-3', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
     ]),
     html.Div(id='tabs-example-content')
 ])
@@ -97,6 +103,20 @@ def render_content(tab):
         html.H3(children='Transactions',
         style={'textAlign': 'center','color': '#2fa4e7'}),
         mt_table
+        ]),  
+    )
+
+    elif tab == 'tab-3':
+        return (html.Div([
+        html.H3(children='Summary stats',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        st_summary_table
+        ]),  
+    # New Div for all elements in the new 'row' of the page
+    html.Div([
+        html.H3(children='Transactions', 
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        st_table
         ]),  
     )
 

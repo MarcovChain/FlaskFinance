@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/Users/marc/miniconda3/envs/ff/bin/python"
+    "python.pythonPath": "/Users/marc/miniconda3/envs/ff/bin/python",
+    "jupyter.jupyterServerType": "local"
 }
