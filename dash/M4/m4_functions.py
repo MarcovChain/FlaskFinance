@@ -21,7 +21,8 @@ def mt_fetch():
     os.path.join(os.path.dirname(__file__), "../../data/mortgage.csv"),
     parse_dates=True,
     date_parser=custom_date_parser,
-)
+    )       
+
     # row-based metrics
     # principal percentage and cumsum
     mt['prin%'] = np.where(mt['type'] == 'payment', (mt['principal'] / (mt['principal'] + mt['interest'])*100), np.nan).round(2)
@@ -66,7 +67,7 @@ def st_fetch():
     tickers = st['ticker'].unique()
 
     # results dataframe
-    col_names =  ['ticker', 'buy_date', 'years_held' , 'book_value', 
+    col_names =  ['ticker', 'buy_date', 'buy_price', 'years_held' , 'book_value', 
                     'current_value', 'total_gain', 'capital_gain', 'div_gain',  
                     'capital_return', 'total_return', 'daily_return']
     st_summary = pd.DataFrame(columns = col_names)
@@ -89,6 +90,7 @@ def st_fetch():
         current_value = round(book['current_value'].sum(), 2)
         book_value = round(book['total'].sum(), 2)
         buy_date = np.datetime_as_string(book['date'], unit='D')[0]
+        buy_price = book['price'].max()
         years_held = book['years_held'].max()
         days_held = book['days_held'].max() / np.timedelta64(1, 'D')
         
@@ -114,6 +116,7 @@ def st_fetch():
         # add to results dataframe
         new_row = {'ticker' : ticker, 
                     'buy_date' : buy_date,
+                    'buy_price' : buy_price,
                     'years_held' : years_held,
                     'book_value' : book_value, 
                     'current_value' : current_value,
@@ -127,7 +130,7 @@ def st_fetch():
         st_summary = st_summary.append(new_row, ignore_index = True)
 
     st_summary = st_summary.sort_values(by = 'daily_return', ascending = False)
-    return st, st_summary
+    return st, st_summary, tickers
 
 # update time of day style for plots
 
