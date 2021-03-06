@@ -154,12 +154,14 @@ def time_of_day(df):
     if mytime.tm_hour < m4_parameters.morning or mytime.tm_hour > m4_parameters.night:
         # night
         df.update_layout(
+        height=600,
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
         font_color=colors['text']
         )
     else:
         df.update_layout(
+        height=600,
         paper_bgcolor=colors['background'],
         font_color=colors['text']
         )
