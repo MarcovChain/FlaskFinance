@@ -89,7 +89,7 @@ def st_fetch():
         # scalar book results
         current_value = round(book['current_value'].sum(), 2)
         book_value = round(book['total'].sum(), 2)
-        buy_date = np.datetime_as_string(book['date'], unit='D')[0]
+        buy_date = book['date'].iloc[0]
         buy_price = book['price'].max()
         years_held = book['years_held'].max()
         days_held = book['days_held'].max() / np.timedelta64(1, 'D')

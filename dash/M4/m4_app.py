@@ -29,6 +29,8 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #### Fetch data 
 mt, mt_summary = m4_functions.mt_fetch()
 st, st_summary, tickers = m4_functions.st_fetch()
+st_graph = st_summary
+st_summary = st_summary.drop(columns=['buy_date'])
 
 #### graphical elements ####
 
@@ -162,6 +164,9 @@ def render_content(tab):
         dcc.Graph(id="stock-price-graph"
                 # figure = stock-price-graph
                 ),
+        html.H3(children='Summary stats',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        st_summary_table
         ]))
 
 ## stock chart callback
@@ -186,10 +191,8 @@ def update_price_figure(ticker):
     quote['SMA_200'] = quote['close'].rolling(window=200).mean()
 
     # Marc's purchase date & cost
-    #quote_date = st_summary.loc[st_summary['ticker'] == tickers]['buy_date'][0]
-    #quote_cost = st_summary.loc[st_summary['ticker'] == tickers]['buy_price'][0]
-    quote_date = "2017-01-01"
-    quote_cost = 0
+    quote_date = st_graph.loc[st_graph['ticker'] == ticker]['buy_date'].iloc[0]
+    quote_cost = float(st_graph.loc[st_graph['ticker'] == ticker]['buy_price'])
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=quote['date'], y=quote['close'],
@@ -224,11 +227,11 @@ def update_price_figure(ticker):
     fig.update_layout(
         autosize=True,
         # width=800,
-        height=600,
+        height=800,
         legend_orientation="h",
         showlegend=False,
         # plot_bgcolor='#f4f1f9'
-        plot_bgcolor='#f5f0eb'
+        #plot_bgcolor='#f5f0eb'
         )
 
     # render slider
