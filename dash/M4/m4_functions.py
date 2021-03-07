@@ -90,7 +90,7 @@ def st_fetch():
         current_value = round(book['current_value'].sum(), 2)
         book_value = round(book['total'].sum(), 2)
         buy_date = book['date'].iloc[0]
-        buy_price = book['price'].max()
+        buy_price = book['price'].min()
         years_held = book['years_held'].max()
         days_held = book['days_held'].max() / np.timedelta64(1, 'D')
         
@@ -154,14 +154,14 @@ def time_of_day(df):
     if mytime.tm_hour < m4_parameters.morning or mytime.tm_hour > m4_parameters.night:
         # night
         df.update_layout(
-        height=600,
+        height=650,
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
         font_color=colors['text']
         )
     else:
         df.update_layout(
-        height=600,
+        height=650,
         paper_bgcolor=colors['background'],
         font_color=colors['text']
         )
@@ -172,7 +172,7 @@ def table_setup (df):
     table = dash_table.DataTable(
         data=df.to_dict('records'),
         columns=[{'id': c, 'name': c} for c in df.columns],
-        style_as_list_view=True,
+        #style_as_list_view=True,
         fixed_rows={'headers': True},
         style_table={'height': 600},
         style_header={'backgroundColor': '#2fa4e7'},

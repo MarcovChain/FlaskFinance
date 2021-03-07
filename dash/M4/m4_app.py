@@ -16,7 +16,6 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
-
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -57,11 +56,7 @@ form_card_group = dbc.Card(
                 dbc.Label("Choose a Stock Symbol"),
                 dcc.Dropdown(
                     id="stock-ticker-select",
-                    options=[
-                        {
-                            "label": ticker,
-                            "value": ticker,
-                        }
+                    options=[{"label": ticker, "value": ticker,}
                         for ticker in tickers
                     ],
                     multi=False, 
@@ -69,17 +64,6 @@ form_card_group = dbc.Card(
                 ),
             ]
         )])
-
-# sidebar
-SIDEBAR_STYLE = {
-    "position": "fixed",
-    "top": "50px",
-    "left": 0,
-    "bottom": 0,
-    "width": "28rem",
-    "padding": "2rem 1rem",
-}
-
 
 #### app layout ####
 
@@ -121,7 +105,6 @@ def render_content(tab):
     html.Div([
         html.H3(children='Principal & Interest',
         style={'textAlign': 'center','color': '#2fa4e7'}),
-
         dcc.Graph(
             id='graph2',
             figure=mt_interest
@@ -132,13 +115,13 @@ def render_content(tab):
         return (html.Div([
         html.H3(children='Summary stats',
         style={'textAlign': 'center','color': '#2fa4e7'}),
-        mt_summary_table
+        html.Div(mt_summary_table, style = {"padding": "1rem 1rem"}),
         ]),  
     # New Div for all elements in the new 'row' of the page
     html.Div([
         html.H3(children='Transactions',
         style={'textAlign': 'center','color': '#2fa4e7'}),
-        mt_table
+        html.Div(mt_table, style = {"padding": "1rem 1rem"}),
         ]),  
     )
 
@@ -146,27 +129,25 @@ def render_content(tab):
         return (html.Div([
         html.H3(children='Summary stats',
         style={'textAlign': 'center','color': '#2fa4e7'}),
-        st_summary_table
+        html.Div(st_summary_table, style = {"padding": "1rem 1rem"}),
         ]),  
     # New Div for all elements in the new 'row' of the page
     html.Div([
         html.H3(children='Transactions', 
         style={'textAlign': 'center','color': '#2fa4e7'}),
-        st_table
+        html.Div(st_table, style = {"padding": "1rem 1rem"}),
         ]),  
     )
 
     if tab == 'tab-4':
         return (html.Div([
-        html.H3(children='Stock history',
-        style={'textAlign': 'center','color': '#2fa4e7'}),
-        form_card_group,
-        dcc.Graph(id="stock-price-graph"
-                # figure = stock-price-graph
-                ),
         html.H3(children='Summary stats',
         style={'textAlign': 'center','color': '#2fa4e7'}),
-        st_summary_table
+        html.Div(st_summary_table, style = {"padding": "1rem 1rem"}),
+        html.H3(children='Stock history',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(form_card_group),
+        dcc.Graph(id="stock-price-graph"),
         ]))
 
 ## stock chart callback
@@ -174,6 +155,9 @@ def render_content(tab):
     Output("stock-price-graph", "figure"),
     Input("stock-ticker-select", "value"),
 )
+# def update_price_figure(ticker):
+#     fig = m4_functions.update_price_figure(ticker)
+#     return fig
 
 def update_price_figure(ticker):
     """Create a plot of stock prices
@@ -224,13 +208,14 @@ def update_price_figure(ticker):
         )
 
     # update layout
+
     fig.update_layout(
         autosize=True,
         # width=800,
-        height=800,
+        height=700,
         legend_orientation="h",
         showlegend=False,
-        # plot_bgcolor='#f4f1f9'
+        #plot_bgcolor=colors['background'],
         #plot_bgcolor='#f5f0eb'
         )
 
@@ -252,7 +237,6 @@ def update_price_figure(ticker):
     )
 
     return fig
-    # fig.show()
 
 if __name__ == '__main__':
     app.run_server(debug=True)
