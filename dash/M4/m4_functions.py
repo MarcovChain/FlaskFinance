@@ -157,14 +157,18 @@ def time_of_day(df):
         height=650,
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
-        font_color=colors['text']
-        )
+        font_color=colors['text'],
+        #hovermode="x unified"
+        ),
+        df.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
     else:
         df.update_layout(
         height=650,
         paper_bgcolor=colors['background'],
-        font_color=colors['text']
-        )
+        font_color=colors['text'],
+        #hovermode="x unified"
+        ),
+        df.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
     return df
 
 # table set up function for plotly

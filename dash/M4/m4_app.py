@@ -197,7 +197,7 @@ def update_price_figure(ticker):
                         ))
 
     fig.add_shape(
-            # Line Horizontal
+            # Line Horizontal 
                 type="line",
                 x0=quote_date,
                 y0=quote_cost,
@@ -215,6 +215,7 @@ def update_price_figure(ticker):
         height=700,
         legend_orientation="h",
         showlegend=False,
+        hovermode="x unified"
         #plot_bgcolor=colors['background'],
         #plot_bgcolor='#f5f0eb'
         )
