@@ -28,8 +28,6 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #### Fetch data 
 mt, mt_summary = m4_functions.mt_fetch()
 st, st_summary, tickers = m4_functions.st_fetch()
-st_graph = st_summary
-st_summary = st_summary.drop(columns=['buy_date'])
 
 #### graphical elements ####
 
@@ -175,8 +173,8 @@ def update_price_figure(ticker):
     quote['SMA_200'] = quote['close'].rolling(window=200).mean()
 
     # Marc's purchase date & cost 
-    quote_date = st_graph.loc[st_graph['ticker'] == ticker]['buy_date'].iloc[0]
-    quote_cost = float(st_graph.loc[st_graph['ticker'] == ticker]['buy_price'])
+    quote_date = st_summary.loc[st_summary['ticker'] == ticker]['buy_date'].iloc[0]
+    quote_cost = float(st_summary.loc[st_summary['ticker'] == ticker]['buy_price'])
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=quote['date'], y=quote['close'],

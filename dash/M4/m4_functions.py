@@ -67,7 +67,7 @@ def st_fetch():
     tickers = st['ticker'].unique()
 
     # results dataframe
-    col_names =  ['ticker', 'buy_date', 'buy_price', 'years_held' , 'book_value', 
+    col_names =  ['ticker', 'buy_date', 'buy_price', 'current_price', 'book_value', 
                     'current_value', 'total_gain', 'capital_gain', 'div_gain',  
                     'capital_return', 'total_return', 'daily_return']
     st_summary = pd.DataFrame(columns = col_names)
@@ -76,7 +76,7 @@ def st_fetch():
         # get current data from Yahoo
         quote = si.get_data(ticker)
         current_date = quote.last('1D').index[0]
-        current_price = quote.last('1D')['close'][0]
+        current_price = round(quote.last('1D')['close'][0], 2)
         
         # book value calculations
         book = st.loc[np.where((st['ticker'] == ticker) & (st['type'] == "buy"))]
@@ -89,7 +89,7 @@ def st_fetch():
         # scalar book results
         current_value = round(book['current_value'].sum(), 2)
         book_value = round(book['total'].sum(), 2)
-        buy_date = book['date'].iloc[0]
+        buy_date = book['date'].iloc[0].date()
         buy_price = book['price'].min()
         years_held = book['years_held'].max()
         days_held = book['days_held'].max() / np.timedelta64(1, 'D')
@@ -117,7 +117,8 @@ def st_fetch():
         new_row = {'ticker' : ticker, 
                     'buy_date' : buy_date,
                     'buy_price' : buy_price,
-                    'years_held' : years_held,
+                    'current_price': current_price,
+                    #'years_held' : years_held,
                     'book_value' : book_value, 
                     'current_value' : current_value,
                     'total_gain' : total_gain,
