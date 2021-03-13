@@ -71,13 +71,14 @@ app.layout = html.Div(style={'backgroundColor': m4_functions.colors['background'
         style={'textAlign': 'center','color': '#2fa4e7'}
     ),
     dcc.Tabs(id='tabs-example', value='tab-1', children=[
-        dcc.Tab(label='Mortgage charts', value='tab-1', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='Mortgage table', value='tab-2', style=m4_parameters.tab_style, 
+        dcc.Tab(label='Stock charts', value='tab-1', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='Stock table', value='tab-3', style=m4_parameters.tab_style, 
+        dcc.Tab(label='Stock table', value='tab-2', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='Stock charts', value='tab-4', style=m4_parameters.tab_style, 
+        dcc.Tab(label='Mortgage charts', value='tab-3', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='Mortgage table', value='tab-4', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
+        
     ]),
     html.Div(id='tabs-example-content')
 ])
@@ -89,7 +90,7 @@ app.layout = html.Div(style={'backgroundColor': m4_functions.colors['background'
               Input('tabs-example', 'value'))
 
 def render_content(tab):
-    if tab == 'tab-1':
+    if tab == 'tab-3':
         return (html.Div([
         html.H3(children='Balance',
         style={'textAlign': 'center','color': '#2fa4e7'}),
@@ -109,7 +110,7 @@ def render_content(tab):
         ),  
     ]))
 
-    elif tab == 'tab-2':
+    elif tab == 'tab-4':
         return (html.Div([
         html.H3(children='Summary stats',
         style={'textAlign': 'center','color': '#2fa4e7'}),
@@ -123,7 +124,7 @@ def render_content(tab):
         ]),  
     )
 
-    elif tab == 'tab-3':
+    elif tab == 'tab-2':
         return (html.Div([
         html.H3(children='Summary stats',
         style={'textAlign': 'center','color': '#2fa4e7'}),
@@ -137,7 +138,7 @@ def render_content(tab):
         ]),  
     )
 
-    if tab == 'tab-4':
+    if tab == 'tab-1':
         return (html.Div([
         html.H3(children='Summary stats',
         style={'textAlign': 'center','color': '#2fa4e7'}),
