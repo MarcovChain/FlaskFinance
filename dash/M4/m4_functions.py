@@ -133,6 +133,59 @@ def st_fetch():
     st_summary = st_summary.sort_values(by = 'daily_return', ascending = False)
     return st, st_summary, tickers
 
+def csa_fetch():
+
+    # suppress pandas error
+    pd.set_option('mode.chained_assignment', None)
+
+    csa = pd.read_csv(
+    os.path.join(os.path.dirname(__file__), "../../data/csa.csv"))
+    csa['date'] =  pd.to_datetime(csa['date'])
+
+    # add hypothetical sell row at end of dataframe
+    csa = csa.append(csa.iloc[ -1:,:])
+    csa.iloc[ -1:,:]['type'] = 'sell'
+
+    # calculate acb totals
+    csa['sell'] = np.where(csa['type'] == 'sell', 1, 0)
+    csa['cumsum'] = csa['sell'].cumsum()
+    csa['total_acb']= csa.groupby(['cumsum'])['acb'].cumsum()
+    csa['total_shares']= csa.groupby(['cumsum'])['shares'].cumsum()
+    csa = csa.drop(['sell', 'cumsum'], axis=1)
+
+    # calculate return per sell period
+    csa['acb'] = round(csa['total_acb'].shift(1).where(csa['type'] == 'sell', csa['acb']), 2)
+    csa['shares'] = round(csa['total_shares'].shift(1).where(csa['type'] == 'sell', csa['shares']), 2)
+    csa['profit'] = round((csa.proceeds - csa.acb), 2)
+    csa['return'] = round(csa.profit / csa.acb * 100, 2)
+    csa = csa.drop(['total_acb', 'total_shares'], axis=1)
+
+    # calculate hypothetical current return
+    quote = si.get_data('CVE.TO')
+    quote['date'] = quote.index
+    csa.iloc[ -1:,:]['date'] = quote.iloc[ -1:,:]['date'][0]
+    csa.iloc[ -1:,:]['price'] = round(quote.iloc[ -1:,:]['close'][0], 2)
+    csa.iloc[ -1:,:]['proceeds'] = round(csa.iloc[ -1:,:]['shares'] * csa.iloc[ -1:,:]['price'], 2)
+    csa.iloc[ -1:,:]['profit'] = (csa.iloc[ -1:,:]['proceeds'] - csa.iloc[ -1:,:]['acb'])
+    csa['return'] = round(csa.profit / csa.acb * 100, 2)
+
+    csa_sell = csa.query('type == "sell"')
+    #csa_profit = round(csa_sell.profit.sum(), 2)
+    #csa_shares = csa_sell.shares.sum()
+
+    # get extra metrics
+    csa_sell['acb/share'] = round(csa_sell['acb'] / csa_sell['shares'], 2)
+    csa_sell['days'] = csa_sell['date'].diff()
+    csa_sell['days'][54] = csa_sell['date'][54] - csa['date'][0]
+    csa_sell['days'] = csa_sell['days'] / np.timedelta64(1,'D')
+    csa_sell['daily-return'] = round(csa_sell['return'] / csa_sell['days'] * 100, 2)
+
+# rearrange dataframe
+    csa_sell= csa_sell[csa_sell.columns[[5,0,9, 1,8,2,3,4, 6, 7, 10]]]
+
+    return csa, csa_sell
+
+
 # update time of day style for plots
 
 ### time of day style
@@ -161,7 +214,7 @@ def time_of_day(df):
         font_color=colors['text'],
         #hovermode="x unified"
         ),
-        df.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
+        #df.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
     else:
         df.update_layout(
         height=650,
@@ -169,7 +222,7 @@ def time_of_day(df):
         font_color=colors['text'],
         #hovermode="x unified"
         ),
-        df.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
+        #df.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
     return df
 
 # table set up function for plotly

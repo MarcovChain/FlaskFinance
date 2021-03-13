@@ -28,6 +28,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #### Fetch data 
 mt, mt_summary = m4_functions.mt_fetch()
 st, st_summary, tickers = m4_functions.st_fetch()
+csa, csa_sell = m4_functions.csa_fetch()
 
 #### graphical elements ####
 
@@ -35,16 +36,25 @@ st, st_summary, tickers = m4_functions.st_fetch()
 mt_balance = px.scatter(mt, x="date", y="balance", color="type", size="principal")
 mt_interest = px.scatter(mt, x="date", y=["prin_total", "int_total"])
 mt_interest.update_layout(hovermode='x')
+csa_graph = px.line(csa, x="date", y="price")
+csa_graph.add_trace(go.Scatter(x=csa_sell.date, y=csa_sell.price, 
+                                name = "sell price", mode="markers", marker_size = 9,
+                                marker_color='rgba(200, 40, 0, .8)',
+                                marker_line_width=1,
+                                showlegend=False))
 
 # adjust plots for time of day
 mt_balance = m4_functions.time_of_day(mt_balance)
 mt_interest = m4_functions.time_of_day(mt_interest)
+csa_graph = m4_functions.time_of_day(csa_graph)
 
 # set up tables
 mt_table = m4_functions.table_setup(mt)
 mt_summary_table = m4_functions.table_setup(mt_summary)
 st_table = m4_functions.table_setup(st)
 st_summary_table = m4_functions.table_setup(st_summary)
+csa_table = m4_functions.table_setup(csa)
+csa_sell_table = m4_functions.table_setup(csa_sell)
 
 ## selection options for stock chart
 form_card_group = dbc.Card(
@@ -78,7 +88,9 @@ app.layout = html.Div(style={'backgroundColor': m4_functions.colors['background'
         dcc.Tab(label='Mortgage charts', value='tab-3', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
         dcc.Tab(label='Mortgage table', value='tab-4', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
-        
+        dcc.Tab(label='CSA charts', value='tab-5', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='CSA table', value='tab-6', style=m4_parameters.tab_style, 
+        selected_style=m4_parameters.tab_selected_style),
     ]),
     html.Div(id='tabs-example-content')
 ])
@@ -147,6 +159,33 @@ def render_content(tab):
         style={'textAlign': 'center','color': '#2fa4e7'}),
         html.Div(form_card_group),
         dcc.Graph(id="stock-price-graph"),
+        ])),
+
+    elif tab == 'tab-6':
+        return (html.Div([
+        html.H3(children='Summary stats',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(csa_sell_table, style = {"padding": "1rem 1rem"}),
+        ]),  
+    # New Div for all elements in the new 'row' of the page
+    html.Div([
+        html.H3(children='Transactions', 
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(csa_table, style = {"padding": "1rem 1rem"}),
+        ]),  
+    )
+
+    if tab == 'tab-5':
+        return (html.Div([
+        html.H3(children='Summary stats',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(csa_sell_table, style = {"padding": "1rem 1rem"}),
+        html.H3(children='CSA history',
+         style={'textAlign': 'center','color': '#2fa4e7'}),
+        dcc.Graph(
+            id='graph3',
+            figure=csa_graph
+        ), 
         ]))
 
 ## stock chart callback
