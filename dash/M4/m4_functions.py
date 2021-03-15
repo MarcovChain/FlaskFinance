@@ -181,7 +181,7 @@ def csa_fetch():
     csa_sell['daily-return'] = round(csa_sell['return'] / csa_sell['days'] * 100, 2)
 
 # rearrange dataframe
-    csa_sell= csa_sell[csa_sell.columns[[5,0,9, 1,8,2,3,4, 6, 7, 10]]]
+    csa_sell= csa_sell[csa_sell.columns[[0,9, 1,8,2,3,4, 6, 7, 10]]]
 
     return csa, csa_sell
 
