@@ -83,7 +83,7 @@ app.layout = html.Div(style={'backgroundColor': m4_functions.colors['background'
     dcc.Tabs(id='tabs-example', value='tab-1', children=[
         dcc.Tab(label='Investment data', value='tab-1', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='CSA data', value='tab-5', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='CSA data', value='tab-2', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
         dcc.Tab(label='Mortgage charts', value='tab-3', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
         dcc.Tab(label='Mortgage table', value='tab-4', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
@@ -98,7 +98,37 @@ app.layout = html.Div(style={'backgroundColor': m4_functions.colors['background'
               Input('tabs-example', 'value'))
 
 def render_content(tab):
-    if tab == 'tab-3':
+    if tab == 'tab-1':
+        return (html.Div([
+        html.H3(children='Summary stats',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(st_summary_table, style = {"padding": "1rem 1rem"}),
+        html.H3(children='Stock history',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(form_card_group),
+        dcc.Graph(id="stock-price-graph"),
+        html.H3(children='Transactions', 
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(st_table, style = {"padding": "1rem 1rem"}),
+        ])),
+
+    elif tab == 'tab-2':
+        return (html.Div([
+        html.H3(children='Summary stats',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(csa_sell_table, style = {"padding": "1rem 1rem"}),
+        html.H3(children='CSA history',
+         style={'textAlign': 'center','color': '#2fa4e7'}),
+        dcc.Graph(
+            id='graph3',
+            figure=csa_graph
+        ), 
+        html.H3(children='Transactions', 
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(csa_table, style = {"padding": "1rem 1rem"}),
+        ]))
+    
+    elif tab == 'tab-3':
         return (html.Div([
         html.H3(children='Balance',
         style={'textAlign': 'center','color': '#2fa4e7'}),
@@ -132,35 +162,7 @@ def render_content(tab):
         ]),  
     )
 
-    elif tab == 'tab-1':
-        return (html.Div([
-        html.H3(children='Summary stats',
-        style={'textAlign': 'center','color': '#2fa4e7'}),
-        html.Div(st_summary_table, style = {"padding": "1rem 1rem"}),
-        html.H3(children='Stock history',
-        style={'textAlign': 'center','color': '#2fa4e7'}),
-        html.Div(form_card_group),
-        dcc.Graph(id="stock-price-graph"),
-        html.H3(children='Transactions', 
-        style={'textAlign': 'center','color': '#2fa4e7'}),
-        html.Div(st_table, style = {"padding": "1rem 1rem"}),
-        ])),
-
-    elif tab == 'tab-5':
-        return (html.Div([
-        html.H3(children='Summary stats',
-        style={'textAlign': 'center','color': '#2fa4e7'}),
-        html.Div(csa_sell_table, style = {"padding": "1rem 1rem"}),
-        html.H3(children='CSA history',
-         style={'textAlign': 'center','color': '#2fa4e7'}),
-        dcc.Graph(
-            id='graph3',
-            figure=csa_graph
-        ), 
-        html.H3(children='Transactions', 
-        style={'textAlign': 'center','color': '#2fa4e7'}),
-        html.Div(csa_table, style = {"padding": "1rem 1rem"}),
-        ]))
+    
 
 ## stock chart callback
 @app.callback(
