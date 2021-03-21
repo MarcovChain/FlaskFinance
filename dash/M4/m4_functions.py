@@ -232,7 +232,7 @@ def table_setup (df):
         columns=[{'id': c, 'name': c} for c in df.columns],
         #style_as_list_view=True,
         fixed_rows={'headers': True},
-        style_table={'height': 600},
+        style_table={'height': 350},
         style_header={'backgroundColor': '#2fa4e7'},
         style_cell={
             'backgroundColor': colors['background'],
