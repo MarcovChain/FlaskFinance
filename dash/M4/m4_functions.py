@@ -61,14 +61,14 @@ def mt_fetch():
 def st_fetch():
 
     st = pd.read_csv(
-    os.path.join(os.path.dirname(__file__), "../../data/stocks.csv"))
+    os.path.join(os.path.dirname(__file__), "../../data/stocks.csv")) 
     st['date'] =  pd.to_datetime(st['date'])
 
     tickers = st['ticker'].unique()
 
     # results dataframe
-    col_names =  ['ticker', 'buy_date', 'buy_price', 'current_price', 'book_value', 
-                    'current_value', 'total_gain', 'capital_gain', 'div_gain',  
+    col_names =  ['ticker', 'buy_date', 'shares', 'buy_price', 'current_price',
+                    'book_value', 'current_value', 'total_gain', 'capital_gain', 'div_gain',  
                     'capital_return', 'total_return', 'daily_return']
     st_summary = pd.DataFrame(columns = col_names)
 
@@ -86,8 +86,8 @@ def st_fetch():
         book['years_held'] = round(book['days_held'] / np.timedelta64(1, 'Y'), 2)
         book['current_value'] = book['current_price'] * book['number']
         book['gain'] = (book['current_value'] - book['total'])
+
         # scalar book results
-        current_value = round(book['current_value'].sum(), 2)
         book_value = round(book['total'].sum(), 2)
         buy_date = book['date'].iloc[0].date()
         buy_price = book['price'].min()
@@ -100,25 +100,25 @@ def st_fetch():
         div['gain'] = div['number'] * div['current_price'] + div['total']
         div_gain = round(div['gain'].sum(), 2)
 
-        # return calculations
-        total_value = round(current_value + div_gain, 2)
-        total_gain = round(total_value - book_value, 2)
-        capital_gain = round(current_value - book_value, 2)
-        capital_return = round((current_value - book_value) / book_value * 100, 2)
-        total_return = round((total_gain / book_value) * 100, 2) 
-        daily_return = round(total_return / days_held * 100, 2)
+        # calculate current value with dividend values
+        current_value = round(book['current_value'].sum() + div_gain, 2)
+        shares = book['number'].sum() + div['number'].sum()
 
-        # if years_held >= 1:
-        #     annual_return = round(((total_value/book_value)**(1/years_held) - 1) * 100, 2)
-        # else:
-        #     annual_return = None
+        # return calculations
+        total_gain = round(current_value - book_value, 2)
+        capital_gain = round(total_gain - div_gain, 2)
+        capital_return = round(capital_gain / book_value * 100, 2)
+        total_return = round(total_gain / book_value * 100, 2) 
+        daily_return = round(total_return / days_held * 100, 2)
 
         # add to results dataframe
         new_row = {'ticker' : ticker, 
                     'buy_date' : buy_date,
                     'buy_price' : buy_price,
                     'current_price': current_price,
+                    #'current_date': current_date,
                     #'years_held' : years_held,
+                    'shares': shares,
                     'book_value' : book_value, 
                     'current_value' : current_value,
                     'total_gain' : total_gain,
