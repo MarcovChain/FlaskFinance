@@ -61,14 +61,14 @@ def mt_fetch():
 def st_fetch():
 
     st = pd.read_csv(
-    os.path.join(os.path.dirname(__file__), "../../data/stocks.csv"))
+    os.path.join(os.path.dirname(__file__), "../../data/stocks.csv")) 
     st['date'] =  pd.to_datetime(st['date'])
 
     tickers = st['ticker'].unique()
 
     # results dataframe
-    col_names =  ['ticker', 'buy_date', 'buy_price', 'years_held' , 'book_value', 
-                    'current_value', 'total_gain', 'capital_gain', 'div_gain',  
+    col_names =  ['ticker', 'buy_date', 'shares', 'buy_price', 'current_price',
+                    'book_value', 'current_value', 'total_gain', 'capital_gain', 'div_gain',  
                     'capital_return', 'total_return', 'daily_return']
     st_summary = pd.DataFrame(columns = col_names)
 
@@ -76,7 +76,7 @@ def st_fetch():
         # get current data from Yahoo
         quote = si.get_data(ticker)
         current_date = quote.last('1D').index[0]
-        current_price = quote.last('1D')['close'][0]
+        current_price = round(quote.last('1D')['close'][0], 2)
         
         # book value calculations
         book = st.loc[np.where((st['ticker'] == ticker) & (st['type'] == "buy"))]
@@ -86,10 +86,10 @@ def st_fetch():
         book['years_held'] = round(book['days_held'] / np.timedelta64(1, 'Y'), 2)
         book['current_value'] = book['current_price'] * book['number']
         book['gain'] = (book['current_value'] - book['total'])
+
         # scalar book results
-        current_value = round(book['current_value'].sum(), 2)
         book_value = round(book['total'].sum(), 2)
-        buy_date = book['date'].iloc[0]
+        buy_date = book['date'].iloc[0].date()
         buy_price = book['price'].min()
         years_held = book['years_held'].max()
         days_held = book['days_held'].max() / np.timedelta64(1, 'D')
@@ -100,24 +100,25 @@ def st_fetch():
         div['gain'] = div['number'] * div['current_price'] + div['total']
         div_gain = round(div['gain'].sum(), 2)
 
-        # return calculations
-        total_value = round(current_value + div_gain, 2)
-        total_gain = round(total_value - book_value, 2)
-        capital_gain = round(current_value - book_value, 2)
-        capital_return = round((current_value - book_value) / book_value * 100, 2)
-        total_return = round((total_gain / book_value) * 100, 2) 
-        daily_return = round(total_return / days_held * 100, 2)
+        # calculate current value with dividend values
+        current_value = round(book['current_value'].sum() + div_gain, 2)
+        shares = book['number'].sum() + div['number'].sum()
 
-        # if years_held >= 1:
-        #     annual_return = round(((total_value/book_value)**(1/years_held) - 1) * 100, 2)
-        # else:
-        #     annual_return = None
+        # return calculations
+        total_gain = round(current_value - book_value, 2)
+        capital_gain = round(total_gain - div_gain, 2)
+        capital_return = round(capital_gain / book_value * 100, 2)
+        total_return = round(total_gain / book_value * 100, 2) 
+        daily_return = round(total_return / days_held * 100, 2)
 
         # add to results dataframe
         new_row = {'ticker' : ticker, 
                     'buy_date' : buy_date,
                     'buy_price' : buy_price,
-                    'years_held' : years_held,
+                    'current_price': current_price,
+                    #'current_date': current_date,
+                    #'years_held' : years_held,
+                    'shares': shares,
                     'book_value' : book_value, 
                     'current_value' : current_value,
                     'total_gain' : total_gain,
@@ -131,6 +132,59 @@ def st_fetch():
 
     st_summary = st_summary.sort_values(by = 'daily_return', ascending = False)
     return st, st_summary, tickers
+
+def csa_fetch():
+
+    # suppress pandas error
+    pd.set_option('mode.chained_assignment', None)
+
+    csa = pd.read_csv(
+    os.path.join(os.path.dirname(__file__), "../../data/csa.csv"))
+    csa['date'] =  pd.to_datetime(csa['date'])
+
+    # add hypothetical sell row at end of dataframe
+    csa = csa.append(csa.iloc[ -1:,:])
+    csa.iloc[ -1:,:]['type'] = 'sell'
+
+    # calculate acb totals
+    csa['sell'] = np.where(csa['type'] == 'sell', 1, 0)
+    csa['cumsum'] = csa['sell'].cumsum()
+    csa['total_acb']= csa.groupby(['cumsum'])['acb'].cumsum()
+    csa['total_shares']= csa.groupby(['cumsum'])['shares'].cumsum()
+    csa = csa.drop(['sell', 'cumsum'], axis=1)
+
+    # calculate return per sell period
+    csa['acb'] = round(csa['total_acb'].shift(1).where(csa['type'] == 'sell', csa['acb']), 2)
+    csa['shares'] = round(csa['total_shares'].shift(1).where(csa['type'] == 'sell', csa['shares']), 2)
+    csa['profit'] = round((csa.proceeds - csa.acb), 2)
+    csa['return'] = round(csa.profit / csa.acb * 100, 2)
+    csa = csa.drop(['total_acb', 'total_shares'], axis=1)
+
+    # calculate hypothetical current return
+    quote = si.get_data('CVE.TO')
+    quote['date'] = quote.index
+    csa.iloc[ -1:,:]['date'] = quote.iloc[ -1:,:]['date'][0]
+    csa.iloc[ -1:,:]['price'] = round(quote.iloc[ -1:,:]['close'][0], 2)
+    csa.iloc[ -1:,:]['proceeds'] = round(csa.iloc[ -1:,:]['shares'] * csa.iloc[ -1:,:]['price'], 2)
+    csa.iloc[ -1:,:]['profit'] = (csa.iloc[ -1:,:]['proceeds'] - csa.iloc[ -1:,:]['acb'])
+    csa['return'] = round(csa.profit / csa.acb * 100, 2)
+
+    csa_sell = csa.query('type == "sell"')
+    #csa_profit = round(csa_sell.profit.sum(), 2)
+    #csa_shares = csa_sell.shares.sum()
+
+    # get extra metrics
+    csa_sell['acb/share'] = round(csa_sell['acb'] / csa_sell['shares'], 2)
+    csa_sell['days'] = csa_sell['date'].diff()
+    csa_sell['days'][54] = csa_sell['date'][54] - csa['date'][0]
+    csa_sell['days'] = csa_sell['days'] / np.timedelta64(1,'D')
+    csa_sell['daily-return'] = round(csa_sell['return'] / csa_sell['days'] * 100, 2)
+
+# rearrange dataframe
+    csa_sell= csa_sell[csa_sell.columns[[0,9, 1,8,2,3,4, 6, 7, 10]]]
+
+    return csa, csa_sell
+
 
 # update time of day style for plots
 
@@ -157,14 +211,18 @@ def time_of_day(df):
         height=650,
         plot_bgcolor=colors['background'],
         paper_bgcolor=colors['background'],
-        font_color=colors['text']
-        )
+        font_color=colors['text'],
+        #hovermode="x unified"
+        ),
+        #df.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
     else:
         df.update_layout(
         height=650,
         paper_bgcolor=colors['background'],
-        font_color=colors['text']
-        )
+        font_color=colors['text'],
+        #hovermode="x unified"
+        ),
+        #df.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
     return df
 
 # table set up function for plotly
