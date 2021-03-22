@@ -27,13 +27,15 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 #### Fetch data 
 mt, mt_summary = m4_functions.mt_fetch()
-st, st_summary, tickers = m4_functions.st_fetch()
+st, st_summary, tickers, current_date = m4_functions.st_fetch()
 csa, csa_sell = m4_functions.csa_fetch()
+sal = m4_functions.sal_fetch()
 
 #### graphical elements ####
 
 # set up plots
 mt_balance = px.scatter(mt, x="date", y="balance", color="type", size="principal")
+mt_balance.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
 mt_interest = px.scatter(mt, x="date", y=["prin_total", "int_total"])
 mt_interest.update_layout(hovermode='x')
 csa_graph = px.line(csa, x="date", y="price")
@@ -42,19 +44,26 @@ csa_graph.add_trace(go.Scatter(x=csa_sell.date, y=csa_sell.price,
                                 marker_color='rgba(200, 40, 0, .8)',
                                 marker_line_width=1,
                                 showlegend=False))
+sal_graph = px.line(sal, x="date", y="amount", color="type")
+sal_graph.add_trace(go.Scatter(x=sal.date, y=sal.amount, 
+                                name = 'amount', mode="markers", marker_size = 12,
+                                marker_line_width=3))
+sal_graph.update_traces(hovertemplate = 'Date: %{x}<br>Amount: %{y:$,.0f}')
 
 # adjust plots for time of day
 mt_balance = m4_functions.time_of_day(mt_balance)
 mt_interest = m4_functions.time_of_day(mt_interest)
 csa_graph = m4_functions.time_of_day(csa_graph)
+sal_graph = m4_functions.time_of_day(sal_graph)
 
 # set up tables
-mt_table = m4_functions.table_setup(mt)
-mt_summary_table = m4_functions.table_setup(mt_summary)
+mt_table = m4_functions.table_setup(mt, 1500)
+mt_summary_table = m4_functions.table_setup(mt_summary, 100)
 st_table = m4_functions.table_setup(st)
-st_summary_table = m4_functions.table_setup(st_summary)
+st_summary_table = m4_functions.table_setup(st_summary, 300)
 csa_table = m4_functions.table_setup(csa)
 csa_sell_table = m4_functions.table_setup(csa_sell)
+sal_table = m4_functions.table_setup(sal, 1000)
 
 ## selection options for stock chart
 form_card_group = dbc.Card(
@@ -83,10 +92,11 @@ app.layout = html.Div(style={'backgroundColor': m4_functions.colors['background'
     dcc.Tabs(id='tabs-example', value='tab-1', children=[
         dcc.Tab(label='Investment data', value='tab-1', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='CSA data', value='tab-2', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='Mortgage charts', value='tab-3', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='Mortgage table', value='tab-4', style=m4_parameters.tab_style, 
+        dcc.Tab(label='Mortgage charts', value='tab-2', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='Mortgage table', value='tab-3', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='CSA data', value='tab-4', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='Salary data', value='tab-5', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
     ]),
     html.Div(id='tabs-example-content')
 ])
@@ -100,7 +110,7 @@ app.layout = html.Div(style={'backgroundColor': m4_functions.colors['background'
 def render_content(tab):
     if tab == 'tab-1':
         return (html.Div([
-        html.H3(children='Summary stats',
+        html.H3(children= 'Summary as of ' + str(current_date)[0:10],
         style={'textAlign': 'center','color': '#2fa4e7'}),
         html.Div(st_summary_table, style = {"padding": "1rem 1rem"}),
         html.H3(children='Stock history',
@@ -111,25 +121,12 @@ def render_content(tab):
         style={'textAlign': 'center','color': '#2fa4e7'}),
         html.Div(st_table, style = {"padding": "1rem 1rem"}),
         ])),
-
+  
     elif tab == 'tab-2':
         return (html.Div([
         html.H3(children='Summary stats',
         style={'textAlign': 'center','color': '#2fa4e7'}),
-        html.Div(csa_sell_table, style = {"padding": "1rem 1rem"}),
-        html.H3(children='CSA history',
-         style={'textAlign': 'center','color': '#2fa4e7'}),
-        dcc.Graph(
-            id='graph3',
-            figure=csa_graph
-        ), 
-        html.H3(children='Transactions', 
-        style={'textAlign': 'center','color': '#2fa4e7'}),
-        html.Div(csa_table, style = {"padding": "1rem 1rem"}),
-        ]))
-    
-    elif tab == 'tab-3':
-        return (html.Div([
+        html.Div(mt_summary_table, style = {"padding": "1rem 1rem"}),
         html.H3(children='Balance',
         style={'textAlign': 'center','color': '#2fa4e7'}),
 
@@ -148,7 +145,7 @@ def render_content(tab):
         ),  
     ]))
 
-    elif tab == 'tab-4':
+    elif tab == 'tab-3':
         return (html.Div([
         html.H3(children='Summary stats',
         style={'textAlign': 'center','color': '#2fa4e7'}),
@@ -161,6 +158,35 @@ def render_content(tab):
         html.Div(mt_table, style = {"padding": "1rem 1rem"}),
         ]),  
     )
+
+    elif tab == 'tab-4':
+        return (html.Div([
+        html.H3(children='CSA history',
+         style={'textAlign': 'center','color': '#2fa4e7'}),
+        dcc.Graph(
+            id='graph3',
+            figure=csa_graph
+        ), 
+        html.H3(children='Summary stats',
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(csa_sell_table, style = {"padding": "1rem 1rem"}),
+        html.H3(children='Transactions', 
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(csa_table, style = {"padding": "1rem 1rem"}),
+        ]))
+
+    elif tab == 'tab-5':
+        return (html.Div([
+        html.H3(children='Salary history',
+         style={'textAlign': 'center','color': '#2fa4e7'}),
+        dcc.Graph(
+            id='graph3',
+            figure=sal_graph
+        ), 
+        html.H3(children='Transactions', 
+        style={'textAlign': 'center','color': '#2fa4e7'}),
+        html.Div(sal_table, style = {"padding": "1rem 1rem"}),
+        ]))
 
     
 

@@ -42,7 +42,7 @@ def mt_fetch():
                   'remaining balance']
     mt_summary = pd.DataFrame(columns = col_names)
     mt_summary = pd.DataFrame({
-                        'total payments': mt.loc[mt['type'] == 'payment', 'principal'].sum(),  
+                        'total payments': round(mt.loc[mt['type'] == 'payment', 'principal'].sum(), 2),  
                         'total extra': [mt.loc[mt['type'] == 'extra', 'principal'].sum()],
                         'total principal': mt['prin_total'].max(),
                         'principal %': mt['prin%'].max(),
@@ -131,7 +131,9 @@ def st_fetch():
         st_summary = st_summary.append(new_row, ignore_index = True)
 
     st_summary = st_summary.sort_values(by = 'daily_return', ascending = False)
-    return st, st_summary, tickers
+    return st, st_summary, tickers, current_date
+
+# Cenvous share account
 
 def csa_fetch():
 
@@ -185,6 +187,16 @@ def csa_fetch():
 
     return csa, csa_sell
 
+# Cenvous salary
+
+def sal_fetch():
+
+    sal = pd.read_csv(
+    os.path.join(os.path.dirname(__file__), "../../data/salary.csv"))
+    sal['date'] =  pd.to_datetime(sal['date'])
+
+    return sal
+
 
 # update time of day style for plots
 
@@ -226,13 +238,13 @@ def time_of_day(df):
     return df
 
 # table set up function for plotly
-def table_setup (df):
+def table_setup (df, height = 350):
     table = dash_table.DataTable(
         data=df.to_dict('records'),
         columns=[{'id': c, 'name': c} for c in df.columns],
         #style_as_list_view=True,
         fixed_rows={'headers': True},
-        style_table={'height': 350},
+        style_table={'height': height},
         style_header={'backgroundColor': '#2fa4e7'},
         style_cell={
             'backgroundColor': colors['background'],
