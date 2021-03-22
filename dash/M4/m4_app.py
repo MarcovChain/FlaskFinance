@@ -36,14 +36,17 @@ sal = m4_functions.sal_fetch()
 # set up plots
 mt_balance = px.scatter(mt, x="date", y="balance", color="type", size="principal")
 mt_balance.update_traces(hovertemplate = 'Date: %{x}<br>Balance: %{y:$,.0f}<br>Principal: %{marker.size:$,.2f}')
+
 mt_interest = px.scatter(mt, x="date", y=["prin_total", "int_total"])
 mt_interest.update_layout(hovermode='x')
+
 csa_graph = px.line(csa, x="date", y="price")
 csa_graph.add_trace(go.Scatter(x=csa_sell.date, y=csa_sell.price, 
                                 name = "sell price", mode="markers", marker_size = 9,
                                 marker_color='rgba(200, 40, 0, .8)',
                                 marker_line_width=1,
                                 showlegend=False))
+
 sal_graph = px.line(sal, x="date", y="amount", color="type")
 sal_graph.add_trace(go.Scatter(x=sal.date, y=sal.amount, 
                                 name = 'amount', mode="markers", marker_size = 12,
@@ -249,15 +252,28 @@ def update_price_figure(ticker):
 
     # update layout
 
+    mytime = time.localtime()
+    if mytime.tm_hour < m4_parameters.morning or mytime.tm_hour > m4_parameters.night:
+        # night
+        colors = {
+        'background': '#111111',
+        'text': '#ffffe5'
+        }
+    else:
+        # day
+        colors = {
+        'background': '#fdfcfa',
+        'text': '#000000'
+        }
+
     fig.update_layout(
         autosize=True,
         # width=800,
         height=650,
         legend_orientation="h",
         showlegend=False,
-        hovermode="x unified"
-        #plot_bgcolor=colors['background'],
-        #plot_bgcolor='#f5f0eb'
+        hovermode="x unified",
+        paper_bgcolor = colors['background']
         )
 
     # render slider
