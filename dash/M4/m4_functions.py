@@ -168,7 +168,7 @@ def csa_fetch():
     csa.iloc[ -1:,:]['date'] = quote.iloc[ -1:,:]['date'][0]
     csa.iloc[ -1:,:]['price'] = round(quote.iloc[ -1:,:]['close'][0], 2)
     csa.iloc[ -1:,:]['proceeds'] = round(csa.iloc[ -1:,:]['shares'] * csa.iloc[ -1:,:]['price'], 2)
-    csa.iloc[ -1:,:]['profit'] = (csa.iloc[ -1:,:]['proceeds'] - csa.iloc[ -1:,:]['acb'])
+    csa.iloc[ -1:,:]['profit'] = round((csa.iloc[ -1:,:]['proceeds'] - csa.iloc[ -1:,:]['acb']), 2)
     csa['return'] = round(csa.profit / csa.acb * 100, 2)
 
     csa_sell = csa.query('type == "sell"')
