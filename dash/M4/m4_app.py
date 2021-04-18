@@ -42,9 +42,9 @@ mt_interest.update_layout(hovermode='x')
 
 csa_graph = px.line(csa, x="date", y="price")
 csa_graph.add_trace(go.Scatter(x=csa_sell.date, y=csa_sell.price, 
-                                name = "sell price", mode="markers", marker_size = 9,
+                                name = "sell price", mode="markers", marker_size = 10,
                                 marker_color='rgba(200, 40, 0, .8)',
-                                marker_line_width=1,
+                                marker_line_width=2,
                                 showlegend=False))
 
 sal_graph = px.line(sal, x="date", y="amount", color="type")
@@ -93,13 +93,11 @@ app.layout = html.Div(style={'backgroundColor': m4_functions.colors['background'
         style={'textAlign': 'center','color': '#2fa4e7'}
     ),
     dcc.Tabs(id='tabs-example', value='tab-1', children=[
-        dcc.Tab(label='Investment data', value='tab-1', style=m4_parameters.tab_style, 
+        dcc.Tab(label='Investments', value='tab-1', style=m4_parameters.tab_style, 
         selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='Mortgage charts', value='tab-2', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='Mortgage table', value='tab-3', style=m4_parameters.tab_style, 
-        selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='CSA data', value='tab-4', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
-        dcc.Tab(label='Salary data', value='tab-5', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='Mortgage', value='tab-2', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='CSA', value='tab-3', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
+        dcc.Tab(label='Salary', value='tab-4', style=m4_parameters.tab_style, selected_style=m4_parameters.tab_selected_style),
     ]),
     html.Div(id='tabs-example-content')
 ])
@@ -146,23 +144,14 @@ def render_content(tab):
             id='graph2',
             figure=mt_interest
         ),  
-    ]))
-
-    elif tab == 'tab-3':
-        return (html.Div([
-        html.H3(children='Summary stats',
-        style={'textAlign': 'center','color': '#2fa4e7'}),
-        html.Div(mt_summary_table, style = {"padding": "1rem 1rem"}),
-        ]),  
-    # New Div for all elements in the new 'row' of the page
+    ]),
     html.Div([
         html.H3(children='Transactions',
         style={'textAlign': 'center','color': '#2fa4e7'}),
         html.Div(mt_table, style = {"padding": "1rem 1rem"}),
-        ]),  
-    )
+        ]))
 
-    elif tab == 'tab-4':
+    elif tab == 'tab-3':
         return (html.Div([
         html.H3(children='CSA history',
          style={'textAlign': 'center','color': '#2fa4e7'}),
@@ -178,7 +167,7 @@ def render_content(tab):
         html.Div(csa_table, style = {"padding": "1rem 1rem"}),
         ]))
 
-    elif tab == 'tab-5':
+    elif tab == 'tab-4':
         return (html.Div([
         html.H3(children='Salary history',
          style={'textAlign': 'center','color': '#2fa4e7'}),
